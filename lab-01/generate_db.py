@@ -60,7 +60,7 @@ def generate_rooms():
         
         writer.writerow(header)
         
-        for i in range(params['number_rooms']):
+        for i in range(1, params['number_rooms'] + 1):
             floor = random.randint(1, 10)
             number_of_beds = random.randint(1, 6)
             room_type = random.randint(0, 10)
@@ -111,7 +111,7 @@ def generate_medicines():
             writer.writerow(data)
 
 def main():
-    generate_medicines()
+    generate_rooms()
 
 
 if __name__ == "__main__":
