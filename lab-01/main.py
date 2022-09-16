@@ -21,7 +21,7 @@ def main():
 
     cursor = conn.cursor()
 
-    copy_to_database(cursor)
+    create_databases(cursor)
 
     conn.commit()
     conn.close()

@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS medicines
 (
     id INT NOT NULL PRIMARY KEY,
     name VARCHAR(100),
-    date DATE,
+    date VARCHAR(100),
     expiration_date VARCHAR(100),
     recipe VARCHAR(100), 
     contraindications VARCHAR(100),
