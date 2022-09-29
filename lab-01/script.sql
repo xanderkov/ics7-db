@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS medicines
     id INT NOT NULL PRIMARY KEY,
     name VARCHAR(100),
     date VARCHAR(100),
-    expiration_date VARCHAR(100),
+    expiration_date DATE NOT NULL,
     recipe VARCHAR(100), 
     contraindications VARCHAR(100),
     side_effects VARCHAR(100)
@@ -51,6 +51,27 @@ CREATE TABLE IF NOT EXISTS patients
     FOREIGN KEY (room_number) REFERENCES rooms(number)
 );
 
+CREATE TABLE IF NOT EXISTS doctor_patient
+(
+    patient_number INT NOT NULL,
+    FOREIGN KEY (patient_number) REFERENCES patients(id),
+    doctor_number INT NOT NULL,
+    FOREIGN KEY (doctor_number) REFERENCES doctors(id)
+);
 
+CREATE TABLE IF NOT EXISTS medicines_patient
+(
+    patient_number INT NOT NULL,
+    FOREIGN KEY (patient_number) REFERENCES patients(id),
+    medicines_number INT NOT NULL,
+    FOREIGN KEY (medicines_number) REFERENCES medicines(id)
+);
 
+CREATE TABLE IF NOT EXISTS mental_patient
+(
+    patient_number INT NOT NULL,
+    FOREIGN KEY (patient_number) REFERENCES patients(id),
+    mental_number INT NOT NULL,
+    FOREIGN KEY (mental_number) REFERENCES medicines(id)
+);
 -- Проверить работу количества пациентов, от их номера палаты

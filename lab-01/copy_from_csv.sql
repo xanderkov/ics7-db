@@ -24,3 +24,18 @@ COPY doctors(id, surname, name, patronymic, medical_speciality, role)
 FROM '/var/lib/postgresql/data/pgdata/csv_tables/tables/doctor.csv'
 DELIMITER ','
 CSV HEADER;
+
+COPY doctor_patient(patient_number, doctor_number) 
+FROM '/var/lib/postgresql/data/pgdata/csv_tables/tables/doctor_patient.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY medicines_patient(patient_number, medicines_number) 
+FROM '/var/lib/postgresql/data/pgdata/csv_tables/tables/medicenes_patient.csv'
+DELIMITER ','
+CSV HEADER;
+
+COPY mental_patient(patient_number, mental_number) 
+FROM '/var/lib/postgresql/data/pgdata/csv_tables/tables/mental_patient.csv'
+DELIMITER ','
+CSV HEADER;

@@ -2,8 +2,6 @@ from email import header
 from russian_names import RussianNames
 import csv
 import random
-import lorem
-import utg
 import wonderwords
 
 params = {
@@ -72,6 +70,8 @@ def generate_rooms():
 
 def generate_diseases():
     header = ['id', 'name', 'symptoms', 'reasons', 'diagnosis', 'classification']
+    def generate_diseases():
+        header = ['id', 'name', 'symptoms', 'reasons', 'diagnosis', 'classification']
     
     with open('./tables/mental.csv', 'w', encoding='UTF8') as f:
         writer = csv.writer(f)
@@ -102,7 +102,43 @@ def generate_medicines():
             
             name = wonderwords.RandomWord().word() + ' ' + wonderwords.RandomWord().word() + ' ' + wonderwords.RandomWord().word() + ' ' + wonderwords.RandomWord().word()
             
-            expiration_data = str(random.randint(1, 30)) + '.' + str(random.randint(1, 12)) + '.' + str(random.randint(2022, 2030))
+            expiration_data =  str(random.randint(2022, 2030)) + '-' + str(random.randint(1, 12)) + '-' + str(random.randint(1, 28))
+            recipe = wonderwords.RandomSentence().sentence()
+            contraindications = wonderwords.RandomSentence().sentence()
+            side_effects = wonderwords.RandomSentence().sentence()
+            
+            data = [i, name, expiration_data, recipe, contraindications, side_effects]
+            writer.writerow(data)
+    with open('./tables/mental.csv', 'w', encoding='UTF8') as f:
+        writer = csv.writer(f)
+        
+        writer.writerow(header)
+        
+        for i in range(params['number_of_diseases']):
+            
+            name = wonderwords.RandomWord().word() + ' ' + wonderwords.RandomWord().word()
+            syptoms = wonderwords.RandomSentence().sentence()
+            reasons = wonderwords.RandomSentence().sentence()
+            diagnosis = wonderwords.RandomSentence().sentence()
+            classification = random.randint(0, 100)
+            
+            data = [i, name, syptoms, reasons, diagnosis, classification]
+            writer.writerow(data)
+
+
+def generate_medicines():
+    header = ['id', 'name', 'expiration date', 'recipe', 'contraindications', 'side effects']
+    
+    with open('./tables/medicines.csv', 'w', encoding='UTF8') as f:
+        writer = csv.writer(f)
+        
+        writer.writerow(header)
+        
+        for i in range(params['number_of_medicine']):
+            
+            name = wonderwords.RandomWord().word() + ' ' + wonderwords.RandomWord().word() + ' ' + wonderwords.RandomWord().word() + ' ' + wonderwords.RandomWord().word()
+            
+            expiration_data =  str(random.randint(2022, 2030)) + '-' + str(random.randint(1, 12)) + '-' + str(random.randint(1, 28))
             recipe = wonderwords.RandomSentence().sentence()
             contraindications = wonderwords.RandomSentence().sentence()
             side_effects = wonderwords.RandomSentence().sentence()
@@ -110,8 +146,25 @@ def generate_medicines():
             data = [i, name, expiration_data, recipe, contraindications, side_effects]
             writer.writerow(data)
 
+def generate_relations(table_name, n, m):
+    header = ['idn', 'idm']
+    
+    with open(table_name, 'w', encoding='UTF8') as f:
+        writer = csv.writer(f)
+        
+        writer.writerow(header)
+        
+        for i in range(n):
+            
+            idm = random.randint(0, m)
+            data = [i, idm]
+            writer.writerow(data)
+            
+
 def main():
-    generate_rooms()
+    generate_relations('./tables/doctor_patient.csv', params['number_patient'], params['number_doctors'] - 1)
+    generate_relations('./tables/medicenes_patient.csv', params['number_patient'], params['number_of_medicine'] - 1)
+    generate_relations('./tables/mental_patient.csv', params['number_patient'], params['number_of_diseases'] - 1)
 
 
 if __name__ == "__main__":
