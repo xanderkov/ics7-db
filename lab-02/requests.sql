@@ -59,4 +59,30 @@ when degree_of_danger < 10 then 'Стоит провести экспереме�
 else 'ВРоде таких нет'
 end as "Степень интересности"
 from patients;
--- 11
+-- 11 -- Получить временную таблицу с средним весом и опасности, от палаты 6 до 13
+SELECT name, surname, AVG(degree_of_danger) AS avgdg, AVG(weight)
+INTO TEMP Avg_Temp_In_Hospital
+FROM patients
+where room_number BETWEEN 6 and 13
+GROUP BY id;
+-- 12 -- Вывести таблицу пациентов и комнат, где номер пациента совпадает с номером комнаты и...
+SELECT patients.name, patients.surname, rooms.number, rooms.floor, rooms.room_type
+from patients 
+JOIN
+rooms
+ON patients.room_number = rooms.number and rooms.floor = 6 and rooms.room_type > 7;
+doctors.id = patients.id; 
+-- 13 
+select name, surname
+from patients
+where patients.id =
+    (select patient_number
+     from doctor_patient
+     GROUP BY patient_number
+     HAVING doctor_patient = 
+     (
+        select max(id)
+        from doctors
+        where doctors.role = 'лечащий врач' 
+     )
+    );
