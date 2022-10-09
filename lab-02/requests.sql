@@ -70,19 +70,42 @@ SELECT patients.name, patients.surname, rooms.number, rooms.floor, rooms.room_ty
 from patients 
 JOIN
 rooms
-ON patients.room_number = rooms.number and rooms.floor = 6 and rooms.room_type > 7;
+ON patients.room_number = rooms.number and rooms.floor = 6 and rooms.room_type > 7
 doctors.id = patients.id; 
--- 13 
+-- 13 Найти пациентов у котрых степень опасность равна степени опапсности палаты, где максимальное пациентво
 select name, surname
 from patients
-where patients.id =
-    (select patient_number
-     from doctor_patient
-     GROUP BY patient_number
-     HAVING doctor_patient = 
+where degree_of_danger =
+    (select room_type
+     from rooms
+     GROUP BY room_type
+     HAVING sum(number_of_patients) = 
      (
-        select max(id)
-        from doctors
-        where doctors.role = 'лечащий врач' 
+        select max(nop)
+        from (select sum(number_of_patients) as nop
+               from rooms
+               GROUP BY room_type
+             ) as od
      )
     );
+-- 14 Вывести пациентов у которых степень опасности = 10 и вес больше 180
+select degree_of_danger, weight, name
+from patients
+where degree_of_danger = 10 and weight > 180
+GROUP BY degree_of_danger, weight, name;
+-- 15 Вывести пацентов средний вес которых больше максимальной степени опасности болезний
+select id, name, avg(weight)
+from patients
+GROUP BY id
+HAVING avg(weight) > (select max(classification)
+from mentals
+);
+-- 16 Вставить пациента в таблицу
+INSERT INTO patients (surname, name, patronymic, height, weight, 
+room_number, degree_of_danger)
+values('Ковель', 'Александр', 'Денисович', 183, 80, 69, 10);
+-- 17 Вставить врачей в пациентов, имя которых является ОЛЕГ
+INSERT INTO patients (surname, name, patronymic)
+select surname, name, patronymic
+from doctors
+where name = 'Олег';
