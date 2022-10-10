@@ -109,3 +109,71 @@ INSERT INTO patients (surname, name, patronymic)
 select surname, name, patronymic
 from doctors
 where name = 'Олег';
+-- 18 задать олегом рост 169
+UPDATE patients
+set height = 169
+where name LIKE 'Олег';
+-- 19 Задать Олегам средний вес Антонов
+UPDATE patients
+set weight = (select avg(weight)
+               from patients
+               where name = 'Антон')
+where name LIKE 'Олег';
+-- 20 удалить пациентов у которых id null
+DELETE from patients
+where id is NULL;
+-- 21 удалить пациентов врача Олега, который яыляется лечащий врач и терапевт
+DELETE from patients
+where surname = (
+   select surname
+   from doctors
+   where doctors.name like 'Олег' 
+   and role 
+   like 'лечащий врач'
+   and medical_speciality
+   like 'терапевт'
+);
+-- 22 вывести количество палат каждого типа
+with type_of_rooms (degree_of_danger, count) as (
+   select room_type, count(*) as total
+   from rooms
+   GROUP by room_type
+)
+select * from type_of_rooms;
+-- 23 вывести самых опасных пациентов в палате
+WITH RECURSIVE most_massive_patient(id, name, degree_of_danger, room_number_next) as (
+    SELECT id, name, degree_of_danger, 2
+    FROM patients
+    WHERE degree_of_danger = (SELECT MAX(degree_of_danger)
+                    FROM patients
+                    WHERE room_number = 1)
+        AND room_number = 1
+    UNION ALL
+    SELECT p.id, p.name,
+    p.degree_of_danger, mmp.room_number_next + 1
+    FROM patients p INNER JOIN most_massive_patient as mmp 
+    ON p.room_number = mmp.room_number_next
+    WHERE p.degree_of_danger = (SELECT MAX(degree_of_danger)
+                        FROM patients
+                        WHERE room_number = p.room_number)
+)
+SELECT * FROM most_massive_patient;
+-- 24 вывести самых опасных пациентво и тех кто лежит с ними в палате, показав максимальных уровень опасности
+SELECT *, 
+        MAX(degree_of_danger) OVER (ORDER BY room_number)
+FROM patients;
+-- 25
+SELECT name, 
+        MAX(degree_of_danger) OVER (ORDER BY room_number),
+        ROW_NUMBER() OVER (ORDER BY room_number)
+FROM patients
+WHERE patients.room_number IN (SELECT room_number
+                            FROM (SELECT id,
+                                    ROW_NUMBER() OVER w as rnum
+                                FROM rooms
+                                WINDOW w AS (
+                                    PARTITION BY room_number
+                                    ORDER BY id
+                                )
+                            ) t 
+WHERE t.rnum = 1);
