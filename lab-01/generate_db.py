@@ -126,6 +126,11 @@ def generate_relations(table_name, n, m):
             
 
 def main():
+    generate_diseases()
+    generate_doctors()
+    generate_medicines()
+    generate_patient()
+    generate_rooms()
     generate_relations('./tables/doctor_patient.csv', params['number_patient'], params['number_doctors'] - 1)
     generate_relations('./tables/medicenes_patient.csv', params['number_patient'], params['number_of_medicine'] - 1)
     generate_relations('./tables/mental_patient.csv', params['number_patient'], params['number_of_diseases'] - 1)

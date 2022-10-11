@@ -1,9 +1,9 @@
+-- 1
 select * from rooms 
-where number > 1488;
-
+where number < 13;
 -- 2 - 
-select * from medicines
-where id BETWEEN 1488 and 1500;
+select * from mentals
+where id BETWEEN 13 and 69;
 -- 3 -- Если в диагнозе присутсвуют depression
 select distinct diagnosis
 from mentals
@@ -16,13 +16,13 @@ select distinct number
 from rooms
 where number 
 BETWEEN 1488 and 1490);
--- 5 - Где существуют пациенты, которые живут в комнатах > 1488 и тип комнаты = 9
+-- 5 - Где существуют пациенты, которые живут в комнатах < 13 и тип комнаты = 9
 select name,surname from patients
 where EXISTS (
 select number, room_type
 from rooms
 where room_type = 9 
-and number > 1488 
+and number < 13 
 and patients.id = number);
 -- 6 - Вывести всех пациентов, у которых степень опасности = 9
 select name, surname, degree_of_danger
@@ -70,8 +70,7 @@ SELECT patients.name, patients.surname, rooms.number, rooms.floor, rooms.room_ty
 from patients 
 JOIN
 rooms
-ON patients.room_number = rooms.number and rooms.floor = 6 and rooms.room_type > 7
-doctors.id = patients.id; 
+ON patients.room_number = rooms.number and rooms.floor = 6 and rooms.room_type > 7;
 -- 13 Найти пациентов у котрых степень опасность равна степени опапсности палаты, где максимальное пациентво
 select name, surname
 from patients
@@ -140,7 +139,7 @@ with type_of_rooms (degree_of_danger, count) as (
    GROUP by room_type
 )
 select * from type_of_rooms;
--- 23 вывести самых опасных пациентов в палате
+-- 23 вывести самых опасных пациентов в палате, если они находятся в каждой палате
 WITH RECURSIVE most_massive_patient(id, name, degree_of_danger, room_number_next) as (
     SELECT id, name, degree_of_danger, 2
     FROM patients
@@ -149,9 +148,8 @@ WITH RECURSIVE most_massive_patient(id, name, degree_of_danger, room_number_next
                     WHERE room_number = 1)
         AND room_number = 1
     UNION ALL
-    SELECT p.id, p.name,
-    p.degree_of_danger, mmp.room_number_next + 1
-    FROM patients p INNER JOIN most_massive_patient as mmp 
+    SELECT p.id, p.name, p.degree_of_danger, mmp.room_number_next + 1
+    FROM patients p JOIN most_massive_patient as mmp 
     ON p.room_number = mmp.room_number_next
     WHERE p.degree_of_danger = (SELECT MAX(degree_of_danger)
                         FROM patients
@@ -162,18 +160,10 @@ SELECT * FROM most_massive_patient;
 SELECT *, 
         MAX(degree_of_danger) OVER (ORDER BY room_number)
 FROM patients;
--- 25
-SELECT name, 
-        MAX(degree_of_danger) OVER (ORDER BY room_number),
-        ROW_NUMBER() OVER (ORDER BY room_number)
-FROM patients
-WHERE patients.room_number IN (SELECT room_number
-                            FROM (SELECT id,
-                                    ROW_NUMBER() OVER w as rnum
-                                FROM rooms
-                                WINDOW w AS (
-                                    PARTITION BY room_number
-                                    ORDER BY id
-                                )
-                            ) t 
-WHERE t.rnum = 1);
+-- 25 Выделение дубликатов в таблице пациентов
+WITH DuplicatesForDelete(Row) AS (
+	SELECT ROW_NUMBER() OVER(PARTITION BY p.name, p.surname, p.patronymic, p.weight, p.height 
+    ORDER BY Name, surname, patronymic, weight, height) AS Row 
+	FROM patients p
+)
+Select * FROM DuplicatesForDelete WHERE Row > 1;
