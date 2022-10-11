@@ -174,6 +174,7 @@ WITH DuplicatesForDelete(Row) AS (
 	FROM patients p
 )
 Select * FROM DuplicatesForDelete WHERE Row > 1;
+
 --  Найти таблицы в котором больше трех атрибутов
 
 WITH Three(Row, name) AS (
@@ -185,11 +186,12 @@ and table_schema = 'public'
 ) select distinct name, row from three where row > 2
 GROUP BY name;
 
-
+-- Подзапрос, чтобы всё это безобразие найти
 select "column_name", table_name from information_schema.columns
 where table_catalog = 'mental_hospital' 
 and table_schema = 'public'
-
+-- ЭТо мой запрос для умных
+explain
 WITH Three(Row, name) AS (
     SELECT ROW_NUMBER() OVER(PARTITION BY table_name) as row, 
     table_name as name
@@ -200,3 +202,11 @@ and table_schema = 'public'
 ) select name from three where row > 2
 GROUP BY three.name
 HAVING MAX(three.row) > 2;
+-- Гаврилова умнее меня это ее запрос
+explain
+SELECT table_name
+ FROM information_schema.columns
+    where table_catalog = 'mental_hospital' 
+and table_schema = 'public'
+group by table_name
+having count(*) > 2
