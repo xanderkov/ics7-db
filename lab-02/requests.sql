@@ -2,24 +2,27 @@
 select * from rooms 
 where number < 13;
 -- 2 - 
+select * from( 
 select * from mentals
-where id BETWEEN 13 and 69;
+where id BETWEEN 13 and 69) as od
+where id = 13 or id = 69
+;
 -- 3 -- Если в диагнозе присутсвуют depression
 select distinct diagnosis
 from mentals
 where diagnosis LIKE '%depression%';
 -- 4 - Пациенты которые живут в комнатах с 1488 по 1490
-select distinct name
+select name, surname, patronymic
 from patients
 where room_number IN (
-select distinct number
+select number
 from rooms
 where number 
 BETWEEN 1488 and 1490);
 -- 5 - Где существуют пациенты, которые живут в комнатах < 13 и тип комнаты = 9
 select name,surname from patients
 where EXISTS (
-select number, room_type
+select distinct 1
 from rooms
 where room_type = 9 
 and number < 13 
@@ -113,11 +116,15 @@ UPDATE patients
 set height = 169
 where name LIKE 'Олег';
 -- 19 Задать Олегам средний вес Антонов
+explain
 UPDATE patients
 set weight = (select avg(weight)
                from patients
                where name = 'Антон')
 where name LIKE 'Олег';
+explain
+select * from patients
+where name like 'Олег%';
 -- 20 удалить пациентов у которых id null
 DELETE from patients
 where id is NULL;
@@ -167,3 +174,29 @@ WITH DuplicatesForDelete(Row) AS (
 	FROM patients p
 )
 Select * FROM DuplicatesForDelete WHERE Row > 1;
+--  Найти таблицы в котором больше трех атрибутов
+
+WITH Three(Row, name) AS (
+    SELECT ROW_NUMBER() OVER(PARTITION BY table_name) as row, table_name as name
+    from information_schema.columns
+    where table_catalog = 'mental_hospital' 
+and table_schema = 'public'
+
+) select distinct name, row from three where row > 2
+GROUP BY name;
+
+
+select "column_name", table_name from information_schema.columns
+where table_catalog = 'mental_hospital' 
+and table_schema = 'public'
+
+WITH Three(Row, name) AS (
+    SELECT ROW_NUMBER() OVER(PARTITION BY table_name) as row, 
+    table_name as name
+    from information_schema.columns
+    where table_catalog = 'mental_hospital' 
+and table_schema = 'public'
+
+) select name from three where row > 2
+GROUP BY three.name
+HAVING MAX(three.row) > 2;
