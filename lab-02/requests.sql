@@ -135,7 +135,7 @@ where surname = (
    from doctors
    where doctors.name like 'Олег' 
    and role 
-   like 'лечащий врач'
+   like 'лечащий врач'count
    and medical_speciality
    like 'терапевт'
 );
@@ -210,3 +210,4 @@ SELECT table_name
 and table_schema = 'public'
 group by table_name
 having count(*) > 2
+
