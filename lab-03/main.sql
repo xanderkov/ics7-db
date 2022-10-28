@@ -141,16 +141,14 @@ CREATE OR REPLACE PROCEDURE weightdegree(current_degree int)
     LANGUAGE plpgsql
 AS $$
     DECLARE 
-        curs CURSOR FOR SELECT *
+        curs CURSOR FOR (SELECT *
                         FROM patients
-                        WHERE degree_of_danger = 10;
+                        WHERE degree_of_danger = current_degree);
     BEGIN
         UPDATE patients SET weight = weight - 5 WHERE current OF curs;
         CLOSE curs;
     END;
 $$;
-
-CALL weightdegree(10);
 
 -- 8. Хранимая процедура доступа с метаданными
 
@@ -221,3 +219,76 @@ values(DEFAULT, 'Ковель', 'Александр', 'Денисович', 183,
 
 select * from patient_copy where id > 4999;
 select * from doctors where id > 1999;
+
+-- Триггер при удалении доктора
+-- перебросит к доктору с наименьшим количеством пациентов
+
+CREATE OR REPLACE FUNCTION UpdateDoctors()
+RETURNS TRIGGER AS
+$$
+    BEGIN
+        RAISE NOTICE 'doctor % % % % %;', 
+        new.surname, new.name, new.patronymic
+        , new.medical_speciality, new.role;
+        
+        DELETE FROM doctor_patient
+        where doctor_number = new.id;
+
+        DELETE FROM doctor_copy
+        where id = new.id;
+
+        UPDATE doctor_patient
+        set doctor_number = (
+            select min(doctor_number) as id from(
+                select count(doctor_number) as number, doctor_number
+                FROM doctor_patient
+                GROUP BY doctor_number
+                HAVING count(doctor_number) = (
+                    select min(cnt) from(
+                        select count(doctor_number) as cnt, doctor_number
+                        from doctor_patient
+                        GROUP BY doctor_number
+                    ) as minfrom
+                )
+                ) as mf
+        )
+        where doctor_copy.id = new.id;
+
+        RETURN new;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER UpdateDoctor
+    instead of DELETE
+    ON doctor_copy
+    for each row
+EXECUTE PROCEDURE UpdateDoctors();
+
+
+create view doctor_copy as
+select * from doctors;
+
+DELETE from doctor_copy
+where id = 1979;
+
+
+select * from doctor_copy
+where id > 1978;
+
+
+UPDATE doctor_patient
+        set doctor_number = (
+            select min(doctor_number) as id from(
+                select count(doctor_number) as number, doctor_number
+                FROM doctor_patient
+                GROUP BY doctor_number
+                HAVING count(doctor_number) = (
+                    select min(cnt) from(
+                        select count(doctor_number) as cnt, doctor_number
+                        from doctor_patient
+                        GROUP BY doctor_number
+                    ) as minfrom
+                )
+                ) as mf
+        )
+where doctor_patient.doctor_number = 1989;
