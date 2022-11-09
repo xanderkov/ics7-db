@@ -207,7 +207,14 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE TRIGGER UpdateWithDoctor
     instead of INSERT
     ON patient_copy
-    for each row
+    for each rowCREATE FUNCTION pymax (a integer, b integer)
+RETURNS integer
+AS $$
+    if a > b:
+        return a
+    return b
+$$ LANGUAGE plpython3u;
+
 EXECUTE PROCEDURE UpdatePatient();
 
 create view patient_copy as

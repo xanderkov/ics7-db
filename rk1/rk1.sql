@@ -11,3 +11,6 @@ from (doctors JOIN doctor_patient
     join patients on patients.id = doctor_patient.patient_number
 GROUP BY doctor_patient.doctor_number, doctors.name, patients.degree_of_danger
 HAVING patients.degree_of_danger = 10
+
+-- 
+((SUMMRIZE (D where D[FIO] = ':jgf') join F) per F{Did})
