@@ -4,46 +4,54 @@ from sqlalchemy.orm import Session, sessionmaker, class_mapper
 
 from json import dumps, load
 
-from models import *
+from models import Patients, Doctors, Rooms, Medicines, Mentals, DoctorPatient, PatientMental, MedicinePatient
 
 
 # LINQ to Object
 # 1. Вывести список всех пациентов
 def get_name_patients(session):
-    data = session.query(Companies).join(Companies.typiescompany).all()
+    data = session.query(Patients).all()
     for row in data:
-        print((row.name, row.typiescompany.name))
+        print(row.name)
 
 
 # 2. Вывести всех пациентов у которых опасность совпадает с типом комнаты
 def get_patients_danger(session):
-    data = session.query(Games).where(Games.developer == Games.publisher).order_by(Games.id).all()
+    data = session.query(Patients).join(Patients.room_number_rel).where(
+        Patients.degree_of_danger == Rooms.room_type).order_by(Patients.id).all()
     for row in data:
-        print((row.id, row.name, row.type, float(row.price), str(row.date_publish)))
+        print((row.id, row.name, row.surname, int(row.degree_of_danger), int(row.room_number)))
 
 
 # 3. Вывести средную опасность пациентов
 def get_avg_patients(session):
-    data = session.query(func.avg(Games.price).label("avg_price"))
+    data = session.query(func.avg(Patients.degree_of_danger).label("avg"))
     for row in data:
-        print(row.avg_price)
+        print(row.avg)
 
 
-# 4. Вывести количество пациентов на 6 этаже
+# 4. Вывести количество пациентов в палатах
 def get_count_patients(session):
-    games_support = session.query(
-        (Games.name).label("game"),
-        func.count(Games.name).label('count_platfroms'),
-    ).join(Supports).join(Platforms).group_by(Games.name).all()
-    for row in games_support:
-        print((row.game, row.count_platfroms))
-
-
-# 5. Вывести пациента и доктора
-def get_patients_and_doctors(session):
-    data = session.query(Games.name, Games.price, (Games.price * Games.number_copies).label("actives")).all()
+    data = session.query(
+        Rooms.number,
+        func.count(Patients.name).label("count_patients")
+    ).join(Rooms).group_by(Rooms.number).all()
     for row in data:
-        print((row.name, float(row.price), float(row.actives)))
+        print((row.count_patients, row.number))
+
+
+# 5. Вывести пациента и докторов, которые лечат этого пациента
+def get_patients_and_doctors(session):
+    data = session.query(
+        Patients.name,
+        Doctors.name,
+    ).filter(
+        Patients.id == DoctorPatient.patient_number,
+    ).filter(
+        Doctors.id == DoctorPatient.doctor_number,
+    )
+    for row in data:
+        print(row)
 
 
 # LINQ to JSON
@@ -58,46 +66,47 @@ def serialize_all(model):
 def patients_to_json(session):
     serialized_labels = [
         serialize_all(label)
-        for label in session.query(Games).order_by(Games.id).all()
+        for label in session.query(Patients).order_by(Patients.id).all()
     ]
 
     for dt in serialized_labels:
-        dt["date_publish"] = str(dt["date_publish"])
-        dt["price"] = float(dt["price"])
+        dt["name"] = str(dt["name"])
+        dt["surname"] = str(dt["surname"])
+        dt["patronymic"] = str(dt["patronymic"])
 
-    with open('lab_07/patients.json', 'w') as f:
+    with open('patients.json', 'w') as f:
         f.write(dumps(serialized_labels, indent=4))
 
 
 def read_json():
-    with open('lab_07/patients.json') as f:
-        games = load(f)
+    with open('patients.json') as f:
+        patient = load(f)
 
-    for g in games:
-        print(g)
+    for p in patient:
+        print(p)
 
     # LINQ to SQL
 
 
-# 1. Однотабличный запрос на выборку. (Вывести название пациента)
+# 1. Однотабличный запрос на выборку. (Вывести фио пациента)
 def select_name_patients(session):
     res = session.execute(
-        select(Games.name, Games.price)
+        select(Patients.name, Patients.surname, Patients.patronymic)
     )
 
     for g in res:
-        print((g.name, float(g.price)))
+        print(g)
 
 
-# 2. Многотабличный запрос на выборку. (Вывести название пациентов и докторов)
+# 2. Многотабличный запрос на выборку. (Вывести фио пациентов и докторов)
 
 def select_patinets_and_doctors(session):
     res = session.execute("""
-        Select * from (Select p.name as platform, count(*) as count_games from tp.platforms as p
-        join tp.supports as s on s.platformid = p.id
-        group by p.id) as dp 
-        where dp.count_games > 500   
-        """)
+        SELECT p.name, p.surname, p.patronymic, d.name, d.surname, d.patronymic
+        FROM patients p
+        JOIN doctor_patient dp ON p.id = dp.patient_number
+        JOIN doctors d ON d.id = dp.doctor_number
+    """)
     for pl in res:
         print(pl)
 
@@ -105,45 +114,13 @@ def select_patinets_and_doctors(session):
 # 3. Добавление данных в таблицу  insert into doctors
 def insert_into_doctors(session):
     try:
-        name = input("Название игры: ")
-        type = input("Тип: ")
-        developer = input("Разработчик: ")
-        publisher = input("Издатель: ")
-        req_age = int(input("Огр. возраст: "))
-        date_pubish = input("Дата выпуска: ")
-        price = float(input("Цена: "))
-        num_copies = int(input("Кол-во копий: "))
-
-        count_games = session.query(func.count(Games.name)).all()
-        id = count_games[0][0] + 1
-
-        find_dev = session.query(Companies.id).join(Games, Companies.id == Games.developerID). \
-            where(Companies.name.like('Valve%')).group_by(Companies.id).all()
-        if find_dev:
-            developer = find_dev[0][0]
-        else:
-            print("не существует!")
-            return
-
-        find_pub = session.query(Companies.id).join(Games, Companies.id == Games.developerID). \
-            where(Companies.name.like('Valve%')).group_by(Companies.id).all()
-        if find_pub:
-            publisher = find_pub[0][0]
-        else:
-            print("не существует!")
-            return
+        name = input("Имя доктора: ")
+        surname = input("Фамилия доктора: ")
 
         session.execute(
-            insert(Games).values(
-                id=id,
+            insert(Doctors).values(
                 name=name,
-                type=type,
-                developer=developer,
-                publisher=publisher,
-                req_age=req_age,
-                date_publish=date_pubish,
-                number_copies=num_copies,
-                price=price
+                surname=surname,
             )
         )
         session.commit()
@@ -155,27 +132,27 @@ def insert_into_doctors(session):
 
 # Обновление данных update doctors
 def select_doctors_all(session):
-    games = session.query(Games).order_by(Games.id).all()
-    for g in games:
-        print((g.id, g.name, g.type, g.developer, g.publisher, g.req_age, str(g.date_publish), float(g.price),
-               g.number_copies))
+    data = session.query(Doctors).order_by(Doctors.id).all()
+    for d in data:
+        print(d.name, d.surname, d.medical_speciality)
 
 
 # Обновление данных update tp.games
 def update_doctors(session):
-    name = input("Название игры: ")
-    price = float(input("Новая цена для игры: "))
+    name = input("Имя доктора: ")
+    surname = input("Фамилия доктора: ")
+    spec = input("Новая специальность доктора: ")
 
     exists = session.query(
-        session.query(Games).where(Games.name == name).exists()
+        session.query(Doctors).where(Doctors.name == name and Doctors.surname == surname).exists()
     ).scalar()
 
     if not exists:
-        print("Такой игры нет!")
+        print("Такого врача нет!")
         return
 
     session.execute(
-        update(Games).where(Games.name == name).values(price=price)
+        update(Doctors).where(Doctors.name == name and Doctors.surname == surname).values(medical_speciality=spec)
     )
     session.commit()
     print("Данные успешно измененны!")
@@ -183,18 +160,19 @@ def update_doctors(session):
 
 # Удаление данных delete tp.games
 def delete_doctors(session):
-    name = input("Название игры для удаления: ")
+    name = input("Имя доктора: ")
+    surname = input("Фамилия доктора: ")
 
     exists = session.query(
-        session.query(Games).where(Games.name == name).exists()
+        session.query(Doctors).where(Doctors.name == name and Doctors.surname == surname).exists()
     ).scalar()
 
     if not exists:
-        print("Такой игры нет!")
+        print("Такого врача нет!")
         return
 
     session.execute(
-        delete(Games).where(Games.name == name)
+        delete(Doctors).where(Doctors.name == name and Doctors.surname == surname)
     )
     session.commit()
     print("Данные успешно удалены!")
@@ -202,7 +180,7 @@ def delete_doctors(session):
 
 # 4. Вызов функци
 def call_func(session):
-    numbers = int(input("Введите кол-во игр у игроков: "))
+    numbers = int(input("Введите кол-во пациетов у докторов: "))
     data = session.execute(f"Select * from tp.get_clients(%d);" % (numbers)).all()
     for row in data:
         print(row)
@@ -214,7 +192,7 @@ MSG = "Меню\n\n" \
       "1. Вывести список всех пациентов\n" \
       "2. Вывести всех пациентов у которых опасность совпадает с типом комнаты \n" \
       "3. Вывести средную опасность пациентов \n" \
-      "4. Вывести количество пациентов на 6 этаже \n" \
+      "4. Вывести количество пациентов в палатах \n" \
       "5. Вывести пациента и доктора \n" \
       "\n--------- LINQ_to_JSON -------------- \n" \
       "6. Запись в JSON документ. \n" \
@@ -222,8 +200,8 @@ MSG = "Меню\n\n" \
       "8. Обновление JSON документа. \n" \
       "--------- LINQ_to_SQL -------------- \n" \
       "\nСоздать классы сущностей, которые моделируют таблицы Вашей базы данных\n" \
-      "9. Однотабличный запрос на выборку. (Вывести название пациента)\n" \
-      "10. Многотабличный запрос на выборку. (Вывести название пациентов и докторов)\n" \
+      "9. Однотабличный запрос на выборку. (Вывести фио пациента)\n" \
+      "10. Многотабличный запрос на выборку. (Вывести фио пациентов и докторов)\n" \
       "Три запроса на добавление, изменение и удаление данных в базе данных\n" \
       "11. Добавление данных в таблицу  insert into doctors\n" \
       "12. Обновление данных update doctors\n" \
@@ -252,7 +230,7 @@ def main():
     print("Версия SQL Alchemy:", sqlalchemy.__version__)
 
     engine = create_engine(
-        f'postgresql://postgres:postgres@localhost:5432/',
+        f'postgresql://postgres:postgres@localhost:5432/mental_hospital',
         pool_pre_ping=True)
     try:
         engine.connect()

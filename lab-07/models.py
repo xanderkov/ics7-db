@@ -8,7 +8,6 @@ BASE = declarative_base()
 
 class Patients(BASE):
     __tablename__ = 'patients'
-    __table_args__ = {"schema": "public"}
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False)
     surname = Column(Text, nullable=False)
@@ -23,7 +22,6 @@ class Patients(BASE):
     
 class Rooms(BASE):
     __tablename__ = 'rooms'
-    __table_args__ = {"schema": "public"}
     number = Column(Integer, primary_key=True)
     floor = Column(Integer, nullable=False)
     number_of_beds = Column(Integer, nullable=False)
@@ -32,15 +30,16 @@ class Rooms(BASE):
 
 class Doctors(BASE):
     __tablename__ = 'doctors'
-    __table_args__ = {"schema": "public"}
     id = Column(Integer, primary_key=True)
     surname = Column(Text, nullable=False)
     name = Column(Text, nullable=False)
+    patronymic = Column(Text, nullable=False)
+    medical_speciality = Column(Text, nullable=False)
+
 
 
 class Medicines(BASE):
     __tablename__ = 'Medicines'
-    __table_args__ = {"schema": "public"}
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False)
     date = Column(Text, nullable=False)
@@ -52,7 +51,6 @@ class Medicines(BASE):
 
 class Mentals(BASE):
     __tablename__ = 'mentals'
-    __table_args__ = {"schema": "public"}
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False)
     symptoms = Column(Text, nullable=False)
@@ -63,20 +61,17 @@ class Mentals(BASE):
 
 class DoctorPatient(BASE):
     __tablename__ = 'doctor_patient'
-    __table_args__ = {"schema": "public"}
     doctor_number = Column(Integer, ForeignKey('doctors.id'), primary_key=True)
     patient_number = Column(Integer, ForeignKey('patients.id'), primary_key=True)
 
 
 class PatientMental(BASE):
     __tablename__ = 'patient_mental'
-    __table_args__ = {"schema": "public"}
     patient_number = Column(Integer, ForeignKey('patients.id'), primary_key=True)
     mental_number = Column(Integer, ForeignKey('mentals.id'), primary_key=True)
 
 
 class MedicinePatient(BASE):
     __tablename__ = 'medicine_patient'
-    __table_args__ = {"schema": "public"}
     medicine_number = Column(Integer, ForeignKey('medicines.id'), primary_key=True)
     patient_number = Column(Integer, ForeignKey('patients.id'), primary_key=True)
