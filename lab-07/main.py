@@ -180,8 +180,7 @@ def delete_doctors(session):
 
 # 4. Вызов функци
 def call_func(session):
-    numbers = int(input("Введите кол-во пациетов у докторов: "))
-    data = session.execute(f"Select * from tp.get_clients(%d);" % (numbers)).all()
+    data = session.execute(f"SELECT current_timestamp").all()
     for row in data:
         print(row)
 
