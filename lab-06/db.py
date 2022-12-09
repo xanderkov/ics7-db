@@ -27,6 +27,7 @@ class MentalHospital:
         try:
             self._cursor.execute(sql)
             self.table = self._cursor.fetchall()
+            print("Запрос выполнен")
             return True
         except Exception as ex:
             print("Ошибка выполнения запроса\n", ex)
@@ -99,7 +100,7 @@ class MentalHospital:
     # 8. Вызвать системную функцию или процедуру
     def get_system_function(self):
         print("Системная функция или процедура. Текущее время:")
-        sql_query = "SELECT current_timestamp"
+        sql_query = "a"
         if self.__sql_executer(sql_query):
             print(self.table[0])
     
@@ -128,8 +129,7 @@ class MentalHospital:
                     INSERT INTO doctors (surname, name, patronymic, medical_speciality, role) VALUES ('Петров', 'Петр', 'Петрович', 'Терапевт', 'Врач');\
                     INSERT INTO doctors (surname, name, patronymic, medical_speciality, role) VALUES ('Сидоров', 'Сидор', 'Сидорович', 'Терапевт', 'Врач');
                     SELECT * FROM doctors where id > 1998;"""
-        if self.__sql_executer(sql_query):
-            print("Данные добавлены")
+        self.__sql_executer(sql_query)
     
     def print_table(self):
         for row in self.table:
