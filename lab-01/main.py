@@ -15,7 +15,7 @@ def copy_to_database(cursor):
     
 def main():
     
-    conn = psycopg2.connect(database = "mental_hospital", user="postgres", password="postgres", host="localhost", port="6432")
+    conn = psycopg2.connect(database = "mental_hospital", user="postgres", password="postgres", host="localhost", port="5432")
     print("Databes opened")
 
     cursor = conn.cursor()

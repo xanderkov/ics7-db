@@ -134,3 +134,29 @@ $$
 $$ LANGUAGE plpython3u;
 
 SELECT * FROM get_most_danger('69');
+
+-- функцию по преобазования доктора в больного 
+
+CREATE OR REPLACE PROCEDURE insert_doctor(id INT)
+AS $$
+    sql_q = plpy.prepare(f"INSERT INTO patients (surname, name, patronymic) \
+    select surname, name, patronymic \
+    from doctors \
+    where id = $1", ["INT"])
+
+    plpy.execute(sql_q, [id])
+
+    sql_q = plpy.prepare(f"DELETE from doctor_patient \
+    where doctor_number = $1", ["INT"])
+
+    plpy.execute(sql_q, [id])
+
+    sql_q = plpy.prepare(f"DELETE from doctors \
+    where id = $1", ["INT"])
+
+    plpy.execute(sql_q, [id])
+$$ LANGUAGE plpython3u;
+
+CALL insert_doctor(1998);
+SELECT * from doctors where id = 1998;
+SELECT * from patients where id > 4999;

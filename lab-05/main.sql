@@ -151,3 +151,38 @@ END
 $$;
 
 CALL split_json_file()
+
+-- функция которая должна вывести всех шизофренников и всех связанных врачей
+CREATE TABLE IF NOT EXISTS Doctors_copy(
+    id INT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    surname VARCHAR(64),
+    name VARCHAR(64),
+    patronymic VARCHAR(64),
+    medical_speciality VARCHAR(20),
+    role VARCHAR(20)
+);
+
+INSERT INTO Doctors_copy (surname, name, patronymic, medical_speciality, role)
+SELECT doc->>'surname', doc->>'name', doc->>'patronymic', doc->>'medical_speciality',
+	   doc->>'role' FROM doctors_import;
+
+SELECT * FROM (
+select distinct mentals.diagnosis, doctors.surname, doctors.role
+from (mentals join mental_patient on mentals.id = mental_patient.mental_number
+join patients on patients.id = mental_patient.patient_number
+join doctor_patient on patients.id = doctor_patient.patient_number
+join doctors on doctors.id = doctor_patient.doctor_number) 
+where mentals.diagnosis LIKE '%depression%') as c
+
+COPY
+(
+    SELECT row_to_json(c) RESULT
+    FROM (
+    select distinct mentals.diagnosis, doctors.surname, doctors.role
+    from (mentals join mental_patient on mentals.id = mental_patient.mental_number
+    join patients on patients.id = mental_patient.patient_number
+    join doctor_patient on patients.id = doctor_patient.patient_number
+    join doctors on doctors.id = doctor_patient.doctor_number) 
+    where mentals.diagnosis LIKE '%depression%') as c
+)
+TO '/var/lib/postgresql/data/pgdata/json-tables/shiza.json';
